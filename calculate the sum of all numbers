@@ -1,0 +1,19 @@
+package program1.java;
+
+public class Add {
+    public static void main(String[] args) {
+        System.out.println("Added value (1-100): " + sumRange(1, 100));
+        System.out.println("Added value (1-50): " + sumRange(1, 50));
+        System.out.println("Added value (1-10): " + sumRange(1, 10));
+        System.out.println("Added value (50-100): " + sumRange(50, 100));
+        System.out.println("Added value (1-1): " + sumRange(1, 1));
+    }
+
+    public static int sumRange(int start, int end) {
+        int sum = 0;
+        for (int i = start; i <= end; i++) {
+            sum += i;
+        }
+        return sum;
+    }
+}
