@@ -1,0 +1,26 @@
+package Device;
+public class Device {
+    private String deviceStatus;
+
+    // Setter method
+    public void setDeviceStatus(String status) {
+        this.deviceStatus = status;
+    }
+
+    // Getter method
+    public String getDeviceStatus() {
+        return deviceStatus;
+    }
+}
+
+ class Main {
+    public static void main(String[] args) {
+        Device myDevice = new Device();
+
+        myDevice.setDeviceStatus("ON");
+        System.out.println("Device Status: " + myDevice.getDeviceStatus());
+
+        myDevice.setDeviceStatus("OFF");
+        System.out.println("Device Status after update: " + myDevice.getDeviceStatus());
+    }
+}
