@@ -1,36 +1,27 @@
-package program1.java;
-
-public class add {
-    public static void main(String[] args) {
-        int sum = 0;
-
-        for (int i = 1; i < 101; i = i + 1) {
-            sum += i;
-        }
-        System.out.println("Added value(1-100):" + sum);
-
-        sum = 0;
-        for (int i = 1; i < 51; i = i + 1) {
-            sum += i;
-        }
-        System.out.println("Added value(1-50):" + sum);
-
-        sum = 0;
-        for (int i = 1; i < 11; i = i + 1) {
-            sum += i;
-        }
-        System.out.println("Added value(1-10):" + sum);
-
-        sum = 0;
-        for (int i = 50; i < 101; i = i + 1) {
-            sum += i;
-        }
-        System.out.println("Added value(50-100):" + sum);
-
-        sum = 0;
-        for (int i = 1; i <= 1; i = i + 1) {
-            sum += i;
-        }
-        System.out.println("Added value(1-1):" + sum);
-    }
-}
+package PrimeNumber;
+import java.util.Scanner;
+public class PrimeNumber {
+	  public static void main(String[] args) {
+	    Scanner scanner = new Scanner(System.in);
+                     // Get input from user
+	        System.out.print("Enter a number: ");
+	        int num = scanner.nextInt();
+                     boolean isPrime = true;
+                        // Handle numbers less than 2
+	        if (num < 2) {
+	            isPrime = false;
+	        } else {
+	            for (int i = 2; i <= Math.sqrt(num); i++) {
+	                if (num % i == 0) {
+	                    isPrime = false;
+	                    break;
+	                }
+	            }
+	        }
+                      // Output result
+	        if (isPrime) {
+	            System.out.println(num + " is a prime number.");
+	        } else {
+	            System.out.println(num + " is not a prime number.");}
+                                 Scanner.close(); }
+                              }
