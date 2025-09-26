@@ -1,0 +1,201 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+// Abstract class demonstrating abstraction and encapsulation
+abstract class CourierBase {
+    private static int trackingCounter = 1000; // static member for unique tracking IDs
+    
+    private final int trackingNumber; // unique ID
+    private String senderName;
+    private String receiverName;
+    private String currentStatus;
+
+    // Constructor
+    public CourierBase(String senderName, String receiverName) {
+        this.trackingNumber = ++trackingCounter; // auto increment tracking number
+        this.senderName = senderName;
+        this.receiverName = receiverName;
+        this.currentStatus = "Registered";
+    }
+
+    // Accessors (Encapsulation)
+    public int getTrackingNumber() {
+        return trackingNumber;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public String getCurrentStatus() {
+        return currentStatus;
+    }
+
+    public void setCurrentStatus(String status) {
+        this.currentStatus = status;
+    }
+
+    // Abstract method to be implemented by subclass (Polymorphism)
+    public abstract void updateStatus(String newStatus);
+
+    // Make this method public for access in subclass
+    public void displayDetails() {
+        System.out.println("Tracking Number: " + trackingNumber);
+        System.out.println("Sender: " + senderName);
+        System.out.println("Receiver: " + receiverName);
+        System.out.println("Current Status: " + currentStatus);
+    }
+}
+
+// Concrete Courier class inheriting from CourierBase
+class Courier extends CourierBase {
+    private String courierType; // e.g., "Standard", "Express"
+
+    // Constructor with access specifiers and static members
+    public Courier(String senderName, String receiverName, String courierType) {
+        super(senderName, receiverName);
+        this.courierType = courierType;
+    }
+
+    public String getCourierType() {
+        return courierType;
+    }
+
+    public void setCourierType(String courierType) {
+        this.courierType = courierType;
+    }
+
+    // Implementation of abstract method (polymorphism)
+    @Override
+    public void updateStatus(String newStatus) {
+        setCurrentStatus(newStatus);
+        System.out.println("Status updated to: " + newStatus);
+    }
+
+    // Override toString method from Object class
+    @Override
+    public String toString() {
+        return "Courier[" +
+                "TrackingNo=" + getTrackingNumber() +
+                ", Sender='" + getSenderName() + '\'' +
+                ", Receiver='" + getReceiverName() + '\'' +
+                ", CourierType='" + courierType + '\'' +
+                ", Status='" + getCurrentStatus() + '\'' +
+                ']';
+    }
+}
+
+// TrackingSystem class to manage multiple couriers
+class TrackingSystem {
+    private List<Courier> couriers;
+
+    public TrackingSystem() {
+        couriers = new ArrayList<>();
+    }
+
+    // Add new courier
+    public void addCourier(Courier courier) {
+        couriers.add(courier);
+        System.out.println("Courier added with Tracking Number: " + courier.getTrackingNumber());
+    }
+
+    // Find courier by tracking number
+    public Courier findCourier(int trackingNumber) {
+        for (Courier c : couriers) {
+            if (c.getTrackingNumber() == trackingNumber) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    // Display all couriers
+    public void displayAll() {
+        if (couriers.isEmpty()) {
+            System.out.println("No couriers in the system.");
+            return;
+        }
+        for (Courier c : couriers) {
+            System.out.println(c);
+        }
+    }
+}
+
+// Main Application class to interact with the user
+public class Main {
+    public static void main(String[] args) {
+        TrackingSystem system = new TrackingSystem();
+        Scanner scanner = new Scanner(System.in);
+        boolean exit = false;
+
+        while (!exit) {
+            System.out.println("\nCourier Tracking System Menu:");
+            System.out.println("1. Register New Courier");
+            System.out.println("2. Update Courier Status");
+            System.out.println("3. Track Courier");
+            System.out.println("4. Show All Couriers");
+            System.out.println("5. Exit");
+            System.out.print("Choose an option: ");
+
+            int choice = -1;
+            if (scanner.hasNextInt()) {
+                choice = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+            } else {
+                System.out.println("Invalid input, please enter a number.");
+                scanner.nextLine(); // consume invalid input
+                continue;
+            }
+
+            switch (choice) {
+                case 1 -> {
+                    System.out.print("Enter Sender Name: ");
+                    String sender = scanner.nextLine();
+                    System.out.print("Enter Receiver Name: ");
+                    String receiver = scanner.nextLine();
+                    System.out.print("Enter Courier Type (Standard/Express): ");
+                    String type = scanner.nextLine();
+
+                    Courier courier = new Courier(sender, receiver, type);
+                    system.addCourier(courier);
+                }
+                case 2 -> {
+                    System.out.print("Enter Tracking Number: ");
+                    int trackingNum = scanner.nextInt();
+                    scanner.nextLine();
+                    Courier courier = system.findCourier(trackingNum);
+                    if (courier == null) {
+                        System.out.println("Courier not found!");
+                    } else {
+                        System.out.print("Enter new status: ");
+                        String status = scanner.nextLine();
+                        courier.updateStatus(status);
+                    }
+                }
+                case 3 -> {
+                    System.out.print("Enter Tracking Number: ");
+                    int trackingNum = scanner.nextInt();
+                    scanner.nextLine();
+                    Courier courier = system.findCourier(trackingNum);
+                    if (courier == null) {
+                        System.out.println("Courier not found!");
+                    } else {
+                        courier.displayDetails();
+                    }
+                }
+                case 4 -> system.displayAll();
+                case 5 -> {
+                    System.out.println("Exiting system. Goodbye!");
+                    exit = true;
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+        scanner.close();
+    }
+}
