@@ -1,0 +1,288 @@
+import java.io.*;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.stream.Collectors;
+
+/**
+ * Abstract base class representing a courier.
+ * Implements Cloneable interface to support object cloning.
+ */
+abstract class CourierBase implements Cloneable, Serializable {
+    private static final long serialVersionUID = 1L;
+
+    private static int counter = 1000;
+    private final int trackingNumber;
+    private String senderName;
+    private String receiverName;
+    private String currentStatus;
+
+    public CourierBase(String senderName, String receiverName) {
+        this.trackingNumber = ++counter;
+        this.senderName = senderName;
+        this.receiverName = receiverName;
+        this.currentStatus = "Registered";
+    }
+
+    public int getTrackingNumber() { return trackingNumber; }
+    public String getSenderName() { return senderName; }
+    public String getReceiverName() { return receiverName; }
+    public String getCurrentStatus() { return currentStatus; }
+    public void setCurrentStatus(String status) { this.currentStatus = status; }
+
+    public abstract void updateStatus(String newStatus);
+
+    @Override
+    public CourierBase clone() {
+        try {
+            return (CourierBase) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError("Clone not supported");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Courier [TrackingNo=" + trackingNumber + ", Sender=" + senderName +
+                ", Receiver=" + receiverName + ", Status=" + currentStatus + "]";
+    }
+}
+
+final class Courier extends CourierBase {
+    private final String courierType;
+
+    public Courier(String senderName, String receiverName, String courierType) {
+        super(senderName, receiverName);
+        this.courierType = courierType;
+    }
+
+    public String getCourierType() { return courierType; }
+
+    @Override
+    public void updateStatus(String newStatus) {
+        setCurrentStatus(newStatus);
+        System.out.println("Status updated to: " + newStatus);
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ", Type=" + courierType;
+    }
+}
+
+class InvalidTrackingNumberException extends Exception {
+    public InvalidTrackingNumberException(String msg) {
+        super(msg);
+    }
+}
+
+class DuplicateCourierException extends Exception {
+    public DuplicateCourierException(String msg) {
+        super(msg);
+    }
+}
+
+interface CourierStorage {
+    void addCourier(Courier courier) throws DuplicateCourierException;
+    Courier findCourier(int trackingNumber) throws InvalidTrackingNumberException;
+    boolean deleteCourier(int trackingNumber) throws InvalidTrackingNumberException;
+    List<Courier> getAllCouriers();
+}
+
+class InMemoryCourierStorage implements CourierStorage, Serializable {
+    private static final long serialVersionUID = 1L;
+    private final List<Courier> courierList = new ArrayList<>();
+
+    @Override
+    public void addCourier(Courier courier) throws DuplicateCourierException {
+        boolean exists = courierList.stream()
+                .anyMatch(c -> c.getTrackingNumber() == courier.getTrackingNumber());
+        if (exists) {
+            throw new DuplicateCourierException("Courier with Tracking Number " + courier.getTrackingNumber() + " already exists.");
+        }
+        courierList.add(courier);
+    }
+
+    @Override
+    public Courier findCourier(int trackingNumber) throws InvalidTrackingNumberException {
+        return courierList.stream()
+                .filter(c -> c.getTrackingNumber() == trackingNumber)
+                .findFirst()
+                .orElseThrow(() -> new InvalidTrackingNumberException("Courier not found with tracking number: " + trackingNumber));
+    }
+
+    @Override
+    public boolean deleteCourier(int trackingNumber) throws InvalidTrackingNumberException {
+        Optional<Courier> courierOpt = courierList.stream()
+                .filter(c -> c.getTrackingNumber() == trackingNumber)
+                .findFirst();
+
+        if (courierOpt.isPresent()) {
+            courierList.remove(courierOpt.get());
+            return true;
+        } else {
+            throw new InvalidTrackingNumberException("Cannot delete. Courier not found: " + trackingNumber);
+        }
+    }
+
+    @Override
+    public List<Courier> getAllCouriers() {
+        return new ArrayList<>(courierList);
+    }
+
+    class CourierPrinter {
+        public void printAll() {
+            List<Courier> sorted = courierList.stream()
+                    .sorted(Comparator.comparingInt(Courier::getTrackingNumber))
+                    .collect(Collectors.toList());
+            sorted.forEach(System.out::println);
+        }
+    }
+}
+
+public class Main {
+    private static final Scanner scanner = new Scanner(System.in);
+    private static final InMemoryCourierStorage storage = new InMemoryCourierStorage();
+
+    public static void main(String[] args) {
+        boolean exit = false;
+
+        while (!exit) {
+            printMenu();
+            int choice = getIntInput();
+
+            try {
+                switch (choice) {
+                    case 1 -> registerCourier();
+                    case 2 -> updateCourierStatus();
+                    case 3 -> trackCourier();
+                    case 4 -> deleteCourier();
+                    case 5 -> displayAllCouriers();
+                    case 6 -> saveCouriersToFile();
+                    case 7 -> loadCouriersFromFile();
+                    case 8 -> showClassReflection();
+                    case 9 -> cloneCourierDemo();
+                    case 0 -> {
+                        System.out.println("Exiting application...");
+                        exit = true;
+                    }
+                    default -> System.out.println("Invalid choice. Try again.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
+        scanner.close();
+    }
+
+    private static void printMenu() {
+        System.out.println("\nCourier Tracking System Menu:");
+        System.out.println("1. Register Courier");
+        System.out.println("2. Update Courier Status");
+        System.out.println("3. Track Courier");
+        System.out.println("4. Delete Courier");
+        System.out.println("5. Display All Couriers");
+        System.out.println("6. Save Couriers to File");
+        System.out.println("7. Load Couriers from File");
+        System.out.println("8. Show Class Info via Reflection");
+        System.out.println("9. Clone Courier Demo");
+        System.out.println("0. Exit");
+        System.out.print("Choose an option: ");
+    }
+
+    private static int getIntInput() {
+        while (!scanner.hasNextInt()) {
+            System.out.println("Invalid input. Enter a number.");
+            scanner.next();
+        }
+        int val = scanner.nextInt();
+        scanner.nextLine();
+        return val;
+    }
+
+    private static void registerCourier() throws DuplicateCourierException {
+        System.out.print("Enter Sender Name: ");
+        String sender = scanner.nextLine();
+        System.out.print("Enter Receiver Name: ");
+        String receiver = scanner.nextLine();
+        System.out.print("Enter Courier Type (Standard/Express): ");
+        String type = scanner.nextLine();
+
+        Courier courier = new Courier(sender, receiver, type);
+        storage.addCourier(courier);
+        System.out.println("Courier registered with Tracking Number: " + courier.getTrackingNumber());
+    }
+
+    private static void updateCourierStatus() throws InvalidTrackingNumberException {
+        System.out.print("Enter Tracking Number: ");
+        int trackingNo = getIntInput();
+        Courier courier = storage.findCourier(trackingNo);
+
+        System.out.print("Enter new status: ");
+        String status = scanner.nextLine();
+        courier.updateStatus(status);
+    }
+
+    private static void trackCourier() throws InvalidTrackingNumberException {
+        System.out.print("Enter Tracking Number: ");
+        int trackingNo = getIntInput();
+        Courier courier = storage.findCourier(trackingNo);
+
+        System.out.println(courier);
+    }
+
+    private static void deleteCourier() throws InvalidTrackingNumberException {
+        System.out.print("Enter Tracking Number to delete: ");
+        int trackingNo = getIntInput();
+        if (storage.deleteCourier(trackingNo)) {
+            System.out.println("Courier deleted successfully.");
+        }
+    }
+
+    private static void displayAllCouriers() {
+        InMemoryCourierStorage.CourierPrinter printer = storage.new CourierPrinter();
+        printer.printAll();
+    }
+
+    private static void saveCouriersToFile() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("couriers.dat"))) {
+            oos.writeObject(storage);
+            System.out.println("Couriers saved to couriers.dat");
+        } catch (IOException e) {
+            System.out.println("Failed to save couriers: " + e.getMessage());
+        }
+    }
+
+    private static void loadCouriersFromFile() {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("couriers.dat"))) {
+            InMemoryCourierStorage loadedStorage = (InMemoryCourierStorage) ois.readObject();
+
+            for (Courier c : loadedStorage.getAllCouriers()) {
+                try {
+                    storage.addCourier(c);
+                } catch (DuplicateCourierException ignored) { }
+            }
+            System.out.println("Couriers loaded from couriers.dat");
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Failed to load couriers: " + e.getMessage());
+        }
+    }
+
+    private static void showClassReflection() {
+        Class<?> clazz = InMemoryCourierStorage.class;
+        System.out.println("Class Name: " + clazz.getName());
+        Method[] methods = clazz.getDeclaredMethods();
+        System.out.println("Methods:");
+        for (Method m : methods) {
+            System.out.println(" - " + m);
+        }
+    }
+
+    private static void cloneCourierDemo() throws InvalidTrackingNumberException {
+        System.out.print("Enter Tracking Number to clone: ");
+        int trackingNo = getIntInput();
+        Courier original = storage.findCourier(trackingNo);
+        CourierBase clone = original.clone();
+        System.out.println("Original Courier: " + original);
+        System.out.println("Cloned Courier: " + clone);
+    }
+}
